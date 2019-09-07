@@ -23,7 +23,13 @@ fun main() {
     startScreen()
     onCommand = {
         if (it.startsWith(":")){
-            name = it.substring(1)
+            val command = it.substring(1,it.indexOf(' ').takeUnless { i -> i == -1 } ?: it.length)
+            val argument = it.substring(it.indexOf(' ').takeUnless { i -> i == -1 } ?: it.length).trim().takeUnless { str -> str.isBlank() }
+            when(command){
+                "exit" -> stopProgram()
+                "name" -> name = argument ?: "Anon"
+                else -> addNewMessage(Message("Error","invalid command \"$command\""))
+            }
         } else {
             channelsToPublish.publish(Channels.MESSAGES, Message(name, it).toJson()).subscribe()
         }

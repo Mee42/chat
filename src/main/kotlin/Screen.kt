@@ -28,17 +28,17 @@ val inputBuffer = mutableListOf<Char>()
 
 var onCommand :(String) -> Unit= { println("command ran \"$it\"") }
 
-fun bufferInputChar(`in`: Char){
+fun bufferInputChar(input: Char){
     when {
-        `in`.toInt() == 0x8 -> //the backspace char
+        input.toInt() == 0x8 -> //the backspace char
             if (inputBuffer.isNotEmpty())
                 inputBuffer.removeAt(inputBuffer.lastIndex)
-        `in`.toInt() == 0xa -> { // enter
+        input.toInt() == 0xa -> { // enter
             val command = inputBuffer.fold(""){a,b -> "$a$b"}
             inputBuffer.clear()
             onCommand(command)
         }
-        else -> inputBuffer.add(`in`)
+        else -> inputBuffer.add(input)
     }
 }
 
@@ -80,7 +80,11 @@ private fun redraw(){
     screen.refresh()
 }
 
-
+fun stopProgram():Nothing{
+    screen.stopScreen(false)
+    @Suppress("UNREACHABLE_CODE")
+    return exitProcess(0)
+}
 fun startScreen(){
     screen.startScreen()
     screen.refresh()
