@@ -59,14 +59,13 @@ private fun redraw(){
         if (row < 0) break
         var index = 0
         loop@ for (rowStart in row .. row + lines){
-            for (colStart in 1 until screen.terminalSize.columns.minus(1)){
-                if (index == line.string.length)
-                    break@loop
+            inner@ for (colStart in 1 until screen.terminalSize.columns.minus(1)){
+                if (index == line.string.length) break@loop
                 val char = line.string[index]
-                val color = line.getColorForCharacter(index)
-                if (char == '\n') break
-                screen.setCharacter(colStart,rowStart, TextCharacter(char).withForegroundColor(color))
                 index++
+                val color = line.getColorForCharacter(index)
+                if (char == '\n') break@inner
+                screen.setCharacter(colStart,rowStart, TextCharacter(char).withForegroundColor(color))
             }
         }
 //        screen.newTextGraphics().putString(1,row,line)

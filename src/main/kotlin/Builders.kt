@@ -4,7 +4,7 @@ import java.lang.IllegalStateException
 
 class TextChunkBuilder {
     var text: String? = null
-    var color: TextColor.ANSI = TextColor.ANSI.WHITE
+    var color: TextColor = TextColor.ANSI.WHITE
     fun build():TextChunk{
         return TextChunk(
                 text = text ?: throw IllegalStateException("no text specified"),
@@ -17,7 +17,10 @@ fun TextChunk.and(block: TextChunkBuilder.() -> Unit):List<TextChunk>{
     return listOf(this,textChunk(block))
 }
 fun List<TextChunk>.and(block: TextChunkBuilder.() -> Unit):List<TextChunk>{
-    return this + textChunk(block)
+    val new = mutableListOf<TextChunk>()
+    new.addAll(this)
+    new.add(textChunk(block))
+    return new
 }
 fun textChunk(block: TextChunkBuilder.() -> Unit):TextChunk{
     return TextChunkBuilder().apply(block).build()
@@ -27,7 +30,7 @@ fun textChunk(block: TextChunkBuilder.() -> Unit):TextChunk{
 class CommandBuilder{
     private val names = mutableListOf<String>()
     var name: String
-        set(value){ names.add(name) }
+        set(value){ names.add(value) }
         get() = error("don't do that")
 
 
@@ -36,12 +39,17 @@ class CommandBuilder{
     var help: String = "no help here yet"
     var reqAdmin: Boolean = false
     var runner: ((String?) -> Unit)? = null
+    fun runner(block: (String?) -> Unit){
+        runner = block
+    }
     fun build():Command{
-//        if (names.isEmpty())
-//            throw IllegalStateException("")
-//        return Command(
-//                names = names
-//        )
-        TODO("not implemented")
+        check(names.isNotEmpty()) { "you need at least one name" }
+        return Command(
+                names = names,
+                argState = argState,
+                argsName = argsName,
+                help = help,
+                reqAdmin = reqAdmin,
+                runner = checkNotNull(runner))
     }
 }

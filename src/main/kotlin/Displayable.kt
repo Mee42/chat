@@ -3,19 +3,20 @@ import java.lang.RuntimeException
 
 abstract class Displayable {
     abstract val string:String
-    abstract fun getColorForCharacter(index: Int): TextColor.ANSI
+    abstract fun getColorForCharacter(index: Int): TextColor
 }
-class TextChunk(val text: String,val color: TextColor.ANSI)
+data class TextChunk(val text: String,val color: TextColor)
 
 
 class StandardDisplayable(private val chunks :List<TextChunk>): Displayable(){
     constructor(vararg chunks: TextChunk):this(chunks.toList())
 
     override val string: String = chunks.fold(""){a,b -> a + b.text }
-    override fun getColorForCharacter(index: Int): TextColor.ANSI {
+
+    override fun getColorForCharacter(index: Int): TextColor {
         var j = 0
         for (chunk in chunks){
-            if (chunk.text.length + j > index)
+            if (chunk.text.length + j > index-1)
                 return chunk.color
             j += chunk.text.length
         }
@@ -45,13 +46,13 @@ class UserErrorException(override val message: String):DisplayableException(mess
     override fun toDisplayable() = userErrorDis(message)
 }
 
-class Message(private val user: String, private val message: String) :Displayable() {
+class Message(private val user: String, message: String) :Displayable() {
     override val string: String = "$user: $message"
 
     override fun getColorForCharacter(index: Int): TextColor.ANSI {
         return when {
-            index == user.length -> TextColor.ANSI.RED
-            index < user.length -> TextColor.ANSI.YELLOW
+            index - 1== user.length -> TextColor.ANSI.RED
+            index - 1 < user.length -> TextColor.ANSI.YELLOW
             else -> TextColor.ANSI.GREEN
         }
     }

@@ -17,12 +17,13 @@ object Channels {
     const val MESSAGES = "messages"
 }
 
-var name = "Anon"
+var username = "Anon"
 
 
 
 
 fun main() {
+    initCommands()
     startScreen()
     onCommand = it@ {
         if (it.startsWith(":")){
@@ -40,7 +41,7 @@ fun main() {
             }
             command.runner.invoke(argument)
         } else {
-            channelsToPublish.publish(Channels.MESSAGES, Message(name, it).toJson()).subscribe()
+            channelsToPublish.publish(Channels.MESSAGES, Message(username, it).toJson()).subscribe()
         }
     }
 
