@@ -19,31 +19,41 @@ object Channels {
 
 var name = "Anon"
 
+
+
+
 fun main() {
     startScreen()
-    onCommand = {
+    onCommand = it@ {
         if (it.startsWith(":")){
-            val command = it.substring(1,it.indexOf(' ').takeUnless { i -> i == -1 } ?: it.length)
+            val commandStr = it.substring(1,it.indexOf(' ').takeUnless { i -> i == -1 } ?: it.length)
             val argument = it.substring(it.indexOf(' ').takeUnless { i -> i == -1 } ?: it.length).trim().takeUnless { str -> str.isBlank() }
-            when(command){
-                "exit" -> stopProgram()
-                "name" -> name = argument ?: "Anon"
-                else -> addNewMessage(Message("Error","invalid command \"$command\""))
+            val command = commands.firstOrNull { com -> com.names.contains(commandStr) }
+            if (command == null){
+                addNewDisplayable(userErrorDis("Invalid command \"$commandStr\""))
+                return@it
             }
+            //handle all the illegal argument states
+            when {
+                command.argState == ArgsState.REQ && argument == null -> throw UserErrorException("\"$commandStr\" command needs argument <${command.argsName}>")
+                command.argState == ArgsState.NONE && argument != null -> addNewDisplayable(warningDis("\"$commandStr\" does not take an argument"))
+            }
+            command.runner.invoke(argument)
         } else {
             channelsToPublish.publish(Channels.MESSAGES, Message(name, it).toJson()).subscribe()
         }
     }
 
+
     channels.subscribe(Channels.MESSAGES).subscribe()
     channels.observeChannels()
-            .doOnNext { println(it) }
             .filter { it.channel == Channels.MESSAGES }
             .map {
-                println("new message:$it")
                 val message = it.message.fromJson<Message>()
-                addNewMessage(message)
-            }.subscribe()
+                addNewDisplayable(message)
+            }
+            .doOnError { addNewDisplayable(internalErrorDis(it)) }
+            .subscribe()
 
     val main = bootstrapClient()
     main.block()

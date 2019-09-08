@@ -23,7 +23,7 @@ fun bootstrapClient(): Mono<Void> {
             .flatMap { connection.set(Key.Prefixes.CLIENT + JOIN + CLIENT_ID,"" + it,SetArgs().ex(60)) }//expires in 60 sec
 
     return Mono.`when`(
-            Mono.fromRunnable<Unit> { println("bootstrapping client") },
+            Mono.fromRunnable<Unit> { println("bootstrapping client\npress enter to continue") },
             keepKeyUpdated.last()
         )
 }
