@@ -46,14 +46,36 @@ class UserErrorException(override val message: String):DisplayableException(mess
     override fun toDisplayable() = userErrorDis(message)
 }
 
-class Message(private val user: String, message: String) :Displayable() {
-    override val string: String = "$user: $message"
+class Message(private val user: String,
+              private val hash: String,
+              private val message: String) : Displayable() {
 
-    override fun getColorForCharacter(index: Int): TextColor.ANSI {
-        return when {
-            index - 1== user.length -> TextColor.ANSI.RED
-            index - 1 < user.length -> TextColor.ANSI.YELLOW
-            else -> TextColor.ANSI.GREEN
+    @Transient
+    private var standard :StandardDisplayable? = null
+
+    private fun initStandard():StandardDisplayable{
+        if (standard == null){
+            standard = StandardDisplayable(textChunk {
+                text = "($hash) "
+                color = TextColor.RGB(100,100,100)
+            }.and {
+                text = user
+                color = TextColor.ANSI.YELLOW
+            }.and {
+                text = ": "
+                color = TextColor.ANSI.RED
+            }.and {
+                text = message
+                color = TextColor.ANSI.GREEN
+            })
         }
+        return standard!!
+    }
+
+    override val string: String
+        get() = initStandard().string
+
+    override fun getColorForCharacter(index: Int): TextColor {
+        return initStandard().getColorForCharacter(index)
     }
 }

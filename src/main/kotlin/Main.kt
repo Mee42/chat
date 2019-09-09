@@ -1,4 +1,5 @@
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands
@@ -19,8 +20,7 @@ object Channels {
 
 var username = "Anon"
 
-
-
+var hash = "   "
 
 fun main() {
     initCommands()
@@ -41,7 +41,8 @@ fun main() {
             }
             command.runner.invoke(argument)
         } else {
-            channelsToPublish.publish(Channels.MESSAGES, Message(username, it).toJson()).subscribe()
+            if(it.isNotBlank())
+                channelsToPublish.publish(Channels.MESSAGES, Message(username,hash,it).toJson()).subscribe()
         }
     }
 
@@ -60,9 +61,11 @@ fun main() {
     main.block()
 }
 
+
+val gson: Gson = GsonBuilder().create()
 private fun Any.toJson(): String {
-    return Gson().toJson(this)
+    return gson.toJson(this)
 }
 private inline fun <reified T> String.fromJson(): T {
-    return Gson().fromJson(this,T::class.java)
+    return gson.fromJson(this,T::class.java)
 }

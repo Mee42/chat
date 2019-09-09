@@ -2,24 +2,25 @@
 
 import com.googlecode.lanterna.TerminalPosition
 import com.googlecode.lanterna.TextCharacter
-import com.googlecode.lanterna.TextColor
 import com.googlecode.lanterna.input.KeyStroke
 import com.googlecode.lanterna.input.KeyType
 import com.googlecode.lanterna.screen.TerminalScreen
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
-import java.lang.Exception
-import java.lang.IllegalStateException
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 
 val screen: TerminalScreen = DefaultTerminalFactory().createScreen()
 
+class Lock
+val bufferLock = Lock()
 
 val buffer = mutableListOf<Displayable>()
 
 fun addNewDisplayable(str: Displayable){
-    buffer.add(0,str)
+    synchronized(bufferLock) {
+        buffer.add(0, str)
+    }
     redraw()
 }
 
@@ -45,30 +46,31 @@ fun bufferInputChar(input: Char){
 private fun redraw(){
     screen.clear()
     var row = screen.terminalSize.rows.minus(5)
-    for (line in buffer){
-        var lines = 1
-        var col = 1
-        for (char in line.string){
-            col ++
-            if (col > screen.terminalSize.columns.minus(1) || char == '\n'){
-                col = 1
-                lines ++
+    synchronized(bufferLock) {
+        for (line in buffer) {
+            var lines = 1
+            var col = 1
+            for (char in line.string) {
+                col++
+                if (col > screen.terminalSize.columns.minus(1) || char == '\n') {
+                    col = 1
+                    lines++
+                }
+            }
+            row -= lines
+            if (row < 0) break
+            var index = 0
+            loop@ for (rowStart in row..row + lines) {
+                inner@ for (colStart in 1 until screen.terminalSize.columns.minus(1)) {
+                    if (index == line.string.length) break@loop
+                    val char = line.string[index]
+                    index++
+                    val color = line.getColorForCharacter(index)
+                    if (char == '\n') break@inner
+                    screen.setCharacter(colStart, rowStart, TextCharacter(char).withForegroundColor(color))
+                }
             }
         }
-        row -= lines
-        if (row < 0) break
-        var index = 0
-        loop@ for (rowStart in row .. row + lines){
-            inner@ for (colStart in 1 until screen.terminalSize.columns.minus(1)){
-                if (index == line.string.length) break@loop
-                val char = line.string[index]
-                index++
-                val color = line.getColorForCharacter(index)
-                if (char == '\n') break@inner
-                screen.setCharacter(colStart,rowStart, TextCharacter(char).withForegroundColor(color))
-            }
-        }
-//        screen.newTextGraphics().putString(1,row,line)
     }
 
     val inputLine = screen.terminalSize.rows.minus(2)
