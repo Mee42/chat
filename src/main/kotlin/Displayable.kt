@@ -48,7 +48,7 @@ class UserErrorException(override val message: String):DisplayableException(mess
 
 class Message(private val user: String,
               private val hash: String,
-              private val message: String) : Displayable() {
+              val message: String) : Displayable() {
 
     @Transient
     private var standard :StandardDisplayable? = null

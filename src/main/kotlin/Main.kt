@@ -1,5 +1,6 @@
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.googlecode.lanterna.TextColor
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands
@@ -16,6 +17,7 @@ val CLIENT_ID = UUID.randomUUID().toString()
 
 object Channels {
     const val MESSAGES = "messages"
+    const val NEWCOMERS = "new"
 }
 
 var username = "Anon"
@@ -48,17 +50,27 @@ fun main() {
 
 
     channels.subscribe(Channels.MESSAGES).subscribe()
+    channels.subscribe(Channels.NEWCOMERS).subscribe()
+
     channels.observeChannels()
             .filter { it.channel == Channels.MESSAGES }
             .map {
                 val message = it.message.fromJson<Message>()
-                addNewDisplayable(message)
+                if (message.message.isNotBlank())
+                    addNewDisplayable(message)
             }
             .doOnError { addNewDisplayable(internalErrorDis(it)) }
             .subscribe()
 
+    channels.observeChannels()
+        .filter { it.channel == Channels.NEWCOMERS }
+        .map { addNewDisplayable(StandardDisplayable(listOf(textChunk {
+            text = "Someone new has joined!"
+            color = TextColor.ANSI.MAGENTA
+        }))) }.subscribe()
     val main = bootstrapClient()
-    main.block()
+
+    main.and(channelsToPublish.publish(Channels.NEWCOMERS,"hello")).block()
 }
 
 
