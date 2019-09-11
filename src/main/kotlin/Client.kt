@@ -17,13 +17,13 @@ const val JOIN = ":"
 fun bootstrapClient(): Mono<Void> {
     // register the client id every minute.
     // redis will delete it after a minute and 30 seconds, so the grace period is 30 seconds
-    println("bootstrapping client assembly: $CLIENT_ID")
+//    println("bootstrapping client assembly: $CLIENT_ID")
 
     val keepKeyUpdated = Flux.interval(Duration.ZERO,Duration.ofMinutes(1))
             .flatMap { connection.set(Key.Prefixes.CLIENT + JOIN + CLIENT_ID,"" + it,SetArgs().ex(60)) }//expires in 60 sec
 
     return Mono.`when`(
-            Mono.fromRunnable<Unit> { println("bootstrapping client\npress enter to continue") },
+            Mono.fromRunnable<Unit> { /*println("bootstrapping client\npress enter to continue")*/ },
             keepKeyUpdated.last()
         )
 }

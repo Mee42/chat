@@ -4,11 +4,10 @@ import com.googlecode.lanterna.TerminalPosition
 import com.googlecode.lanterna.TextCharacter
 import com.googlecode.lanterna.input.KeyStroke
 import com.googlecode.lanterna.input.KeyType
-import com.googlecode.lanterna.screen.TerminalScreen
+import com.googlecode.lanterna.screen.*
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
-import kotlin.concurrent.thread
 import kotlin.system.exitProcess
-
+import kotlin.concurrent.thread
 
 val screen: TerminalScreen = DefaultTerminalFactory().createScreen()
 
@@ -79,7 +78,7 @@ private fun redraw(){
     for ((index, char) in inputBuffer.withIndex()){
         screen.setCharacter(6 + index,inputLine, TextCharacter(char))
     }
-    screen.refresh()
+    screen.refresh(Screen.RefreshType.DELTA)
 }
 
 fun stopProgram():Nothing{
@@ -91,6 +90,7 @@ fun startScreen(){
     screen.startScreen()
     screen.refresh()
     redraw()
+    screen.refresh(Screen.RefreshType.COMPLETE)
     thread {
         while (true){
             try {
